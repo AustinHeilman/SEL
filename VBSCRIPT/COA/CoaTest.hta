@@ -1,0 +1,157 @@
+<HTML>
+<HEAD>
+<HTA:APPLICATION 
+	AUTHOR="Austin Heilman"
+	ID="oHTA"
+	APPLICATIONNAME="Vista COA Patch Checker"
+	SINGLEINSTANCE="YES"
+	MAXIMIZEBUTTON="NO"
+	MINIMIZEBUTTON="NO"
+	SCROLL="YES"
+	SYSMENU="YES"
+	WINDOWSTATE="normal"
+	VERSION="1.02"
+>
+<TITLE>Vista COA Patch Checker (1.02) (6AH)</TITLE>
+</HEAD>
+<BODY>
+
+<FONT FACE=VERDANA SIZE=2>
+	
+<SPAN ID="WinVer"></SPAN>
+	
+<SPAN ID="DebugA"></SPAN>
+
+<SPAN ID="Result"></SPAN>
+
+</BODY>
+</HTML>
+
+<SCRIPT LANGUAGE="VBScript">
+	Call Main() 
+	
+	'--------------------------
+	' VAIO COA Patch Verification Script
+	'--------------------------
+	' WSH Documentation:
+	' http://www.pctools.com/guides/scripting/detail/144/?act=reference
+	'--------------------------
+	' History
+	' Austin Heilman (04-26-07)
+	' Created Script
+	'--------------------------
+		
+	Function Main()
+		If ( PatchInstalled("kb931573") ) Then
+			Call Pass()
+		Else
+			Call Fail()
+		End If
+	End Function
+	
+	Function PatchInstalled(patch_name)
+		' Value is false until the script is sure it found a match.
+		PatchInstalled = False
+	
+		' First check the windows update history (fastest)
+		Set obj_session = CreateObject("Microsoft.Update.Session")
+		Set obj_searcher = obj_session.CreateUpdateSearcher
+		history_count = CInt(obj_searcher.GetTotalHistoryCount)
+		Set col_history = obj_searcher.QueryHistory(0, history_count+1)
+		patch_name = LCase(patch_name)
+		For Each obj_entry in col_history
+			If ( InStr(LCase(obj_entry.Title), patch_name) ) Then
+				If ( obj_entry.ResultCode = 2 ) Then 'The operation completed successfully
+					PatchInstalled = True
+					Exit Function
+				Else
+					install_result = ""
+					Select Case Int(obj_entry.ResultCode)
+						Case 1
+							install_result = " In progress."
+						Case 2
+							install_result = " Installed."
+						Case 3
+							install_result = " Operation complete, but with errors."
+						Case 4
+							install_result = "OPERATION FAILED"
+						Case 5
+							install_result = "OPERATION ABORTED"
+						Case Else
+							install_result = "Install result ID unknown ("&installationResult.GetUpdateResult(i).ResultCode&")"
+					End Select
+					DebugA.InnerHTML = "<P>Patch Result Code: ("&obj_entry.ResultCode&")<BR>"&install_result&"</P>"
+					PatchInstalled = True
+					Exit Function
+				End If
+			End If
+		Next
+		
+		' Check system registry for presence of the patch.
+		dim str_computer, str_key, str_subkey
+		dim obj_registry
+		dim arr_subkeys()
+		dim display_name, display_version, install_location
+		CONST HKEY_LOCAL_MACHINE = &H80000002
+
+		install_list = "Installed Software: <BR>"
+		str_computer = "."
+		str_key = "SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\Packages"
+		Set obj_registry = GetObject("winmgmts:" & _
+			"{impersonationLevel=Impersonate}!\\" & _
+			str_computer & "\root\default:StdRegProv")
+		
+		obj_registry.EnumKey HKEY_LOCAL_MACHINE, str_key, arr_subkeys
+		If ( IsArray(arr_subkeys) = FALSE ) THEN 
+			Exit Function
+		End If
+		
+		For Each str_subkey In arr_subkeys
+			If ( InStr(LCase(str_subkey), patch_name) ) Then
+				PatchInstalled = True
+				Exit Function
+			End If
+			display_name = vbEmpty
+		Next
+		
+		'Nothing could be found :-(
+		PatchInstalled = False
+	End Function
+
+	Function ListPatches()
+		Set obj_session = CreateObject("Microsoft.Update.Session")
+		Set obj_searcher = obj_session.CreateUpdateSearcher
+		history_count = CInt(obj_searcher.GetTotalHistoryCount)
+		Set col_history = obj_searcher.QueryHistory(0, history_count+1)
+		
+		patch_list = "Installed Patches ("&history_count&"):<BR>"
+		patch_name = LCase(patch_name)
+		For Each obj_entry in col_history
+			patch_list = patch_list & "<BR>" & obj_entry.Title
+		Next
+
+		DebugA.InnerHTML = patch_list
+	End Function
+	
+	Function Pass()
+		Result.InnerHTML = "<P>The COA Patch (KB931573) is installed.</P><P><FONT COLOR=DARKGREEN><B>*PASSED*</B></FONT></P>"
+	End Function
+	
+	Function Fail()
+		result_str = "<P>The COA Patch (KB931573) is <B>NOT</B> installed.</P>"
+		result_str = result_str & "<P><FONT COLOR=RED><B>*FAILED*</B></FONT></P>"
+		result_str = result_str & "<P>Technician: " _
+			&"<INPUT ID=installbtn  TYPE=BUTTON VALUE='INSTALL PATCH' NAME=INSTALL_BUTTON  onClick=InstallSub>"
+		Result.InnerHTML = result_str
+	End Function
+	
+	Function InstallSub()
+		Set win_shell = CreateObject("Wscript.Shell")
+		
+		path = oHTA.commandLine
+		path = Left(path, InStrRev(path, "\"))
+		path = Right(path, Len(path)-1)
+			
+		win_shell.Run "wusa.exe "&path&"\Windows6.0-KB931573-x86.msu"
+	End Function		
+</SCRIPT>

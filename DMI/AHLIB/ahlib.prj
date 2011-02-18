@@ -1,0 +1,24 @@
+82572
+J:\CPP\AHLIB\ahlib.prj
+ahlib.OPN
+novcs
+ahlib.DEF
+14
+1200065276
+0 -1 -1 0 0 "..\APClass\apvector.cpp" ""
+0 -1 -1 0 0 "..\APClass\apvector.h" ""
+0 -1 -1 0 0 "..\APClass\apstring.h" ""
+0 -1 0 0 0 "..\DigitalMars\include\fstream.h" ""
+0 -1 0 0 0 "..\DigitalMars\include\iostream.h" ""
+0 -1 0 0 0 "..\DigitalMars\include\string.h" ""
+0 -1 0 0 0 "..\DigitalMars\include\stdlib.h" ""
+0 -1 0 0 0 "..\DigitalMars\include\assert.h" ""
+0 -1 0 0 0 "..\DigitalMars\include\dos.h" ""
+0 -1 0 0 0 "..\DigitalMars\include\bios.h" ""
+0 -1 0 0 0 "..\DigitalMars\include\time.h" ""
+0 -1 0 0 0 "..\DigitalMars\include\disp.h" ""
+0 -1 0 0 0 "..\DigitalMars\include\ctype.h" ""
+0 0 0 0 0 "..\HEADERS\tui.cpp" ""
+0 0 -1 0 0 "..\HEADERS\tui.h" ""
+0 0 -1 0 0 "..\HEADERS\keyboard.h" ""
+0 0 -1 0 0 "..\HEADERS\screen.h" ""

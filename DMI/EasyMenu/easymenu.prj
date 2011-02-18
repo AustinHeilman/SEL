@@ -1,0 +1,19 @@
+82572
+J:\CPP\EasyMenu\easymenu.prj
+easymenu.OPN
+novcs
+easymenu.DEF
+6
+1200504952
+0 0 0 0 0 "cfgfile.lib" ""
+0 0 0 0 0 "keyboard.lib" ""
+0 0 0 0 0 "screen.lib" ""
+0 0 0 0 0 "tui.lib" ""
+0 0 0 0 0 "main.cpp" ""
+0 0 -1 0 0 "..\apclass\apstring.h" ""
+0 0 -1 0 0 "..\apclass\apvector.cpp" ""
+0 0 -1 0 0 "..\apclass\apvector.h" ""
+0 0 -1 0 0 "..\libs\small\tui.h" ""
+0 0 -1 0 0 "..\libs\small\cfgfile.h" ""
+0 0 -1 0 0 "..\libs\small\keyboard.h" ""
+0 0 -1 0 0 "..\libs\small\screen.h" ""

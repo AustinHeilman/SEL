@@ -1,0 +1,162 @@
+<HTML>
+<HEAD>
+<TITLE>Vista Upgrade Checker</TITLE>
+<HTA:APPLICATION
+	ID="objTestHTA"
+	AUTHOR="Austin Heilman"
+	APPLICATIONNAME="Vista Upgrade Checker"
+	SINGLEINSTANCE="yes"
+	MAXIMIZEBUTTON="no"
+	MINIMIZEBUTTON="no"
+	SCROLL="no"
+	SYSMENU="yes"
+	WINDOWSTATE="normal"
+	VERSION="1.0"
+>
+<STYLE>
+	td{ background-color=#C0C0C0; }
+</STYLE>
+</HEAD>
+<BODY>
+
+<TABLE BORDER=0 CELLSPACING=1 CELLPADDING=2 WIDTH=350>
+	<TR><TD><B>Check</B></TD><TD><B>Status</B></TD></TR>
+	<TR><TD ID=MEMT></TD><TD ID=MEMR></TD></TR>
+	<TR><TD ID=HDDT></TD><TD ID=HDDR></TD></TR>
+</TABLE>
+</BODY>
+</HTML>
+
+<SCRIPT LANGUAGE="VBScript">
+	Set wmi_service = GetObject("winmgmts:")
+	' Note: Should be 1 gig, but we lose some to the video chip
+	' Instead, I have set it to look for 1000MB (1024 = 1 gig / 1073741824 bytes)
+	CONST MEM_REQUIRED = 1048576000
+	CONST HDD_REQUIRED = 16106127360
+	
+	Call Main()
+
+	'--------------------------
+	' VISTA UPGRADE PREREQUISITE CHECKER
+	'--------------------------
+	' History
+	' Austin Heilman (04-30-07)
+	' Created Script
+	'--------------------------
+
+	Function Main()
+		Call ShowMemoryAmount()
+		Call CheckMemoryAmount()
+		
+		Call ShowHardDiskFree()
+		Call CheckHardDiskFree()
+	End Function
+
+	Function ShowMemoryAmount()
+		DIM mem_info
+		DIM ram_amt, vram_amt, total
+		
+		Set col_computer = wmi_service.ExecQuery("Select * from Win32_ComputerSystem")
+		For Each computer in col_computer
+			ram_amt = Fix(computer.TotalPhysicalMemory)
+			Exit For
+		Next
+		Set col_computer = wmi_service.ExecQuery("Select * from Win32_VideoController")
+		For Each computer in col_computer
+			vram_amt = Fix(computer.AdapterRAM)
+			Exit For
+		Next
+		
+		total = ram_amt + vram_amt
+		
+		
+		MEMT.InnerHTML =  "<B>Memory Information</B><BR>" _
+			&"Ram Amount: "&ConvertBytes(ram_amt, true)&"<BR>"_
+			&"Required: "&ConvertBytes(MEM_REQUIRED, true)&"<BR><BR>"_
+			&"<FONT SIZE=2>"_
+			&"Video Ram:  "&ConvertBytes(vram_amt, true)&"<BR>"_
+			&"Total: "&ConvertBytes(total, true)
+			
+	End Function
+
+	Function CheckMemoryAmount()
+		DIM amount
+		Set col_computer = wmi_service.ExecQuery("Select * from Win32_ComputerSystem")
+		For Each computer in col_computer
+			amount = Fix(computer.TotalPhysicalMemory)
+			Exit For
+		Next
+		
+		If ( Fix(amount) > Fix(MEM_REQUIRED) ) Then
+			ShowPass(MEMR)
+		Else
+			ShowFail(MEMR)
+		End If
+	End Function
+
+	Function ShowHardDiskFree()
+		DIM available
+		Set logical_disk = wmi_service.Get("Win32_LogicalDisk.DeviceID='c:'")
+		available = logical_disk.FreeSpace
+		
+		infotext = "<B>Hard Disk Space</B><BR>" _
+			&"Required:  "&ConvertBytes(HDD_REQUIRED, true)&"<BR>"_
+			&"Available: "&ConvertBytes(available, true)
+		HDDT.InnerHTML = infotext
+	End Function
+
+	Function CheckHardDiskFree()
+		DIM available
+		Set logical_disk = wmi_service.Get("Win32_LogicalDisk.DeviceID='c:'")
+		available = logical_disk.FreeSpace
+		
+		If ( Fix(available) > Fix(HDD_REQUIRED) ) Then
+			ShowPass(HDDR)
+		Else
+			ShowFail(HDDR)
+		End If
+	End Function
+
+	Function ShowPass(byref object)
+		object.InnerHTML = "<CENTER><B>PASS</B></CENTER>"
+		object.style.BackGroundColor = "DarkGreen"
+		object.style.Color = "White"
+	End Function
+
+	Function ShowFail(byref object)
+		object.InnerHTML = "<CENTER><B>FAIL</B></CENTER>"
+		object.style.BackGroundColor = "DarkRed"
+		object.style.Color = "White"
+	End Function
+
+	Function ConvertBytes(num_bytes, tag)
+		dim btype, divide, result
+
+		If ( num_bytes >= 1099511627776 ) Then
+			btype = "TB"
+			divide = 4
+		ElseIf ( num_bytes >= 1073741824 ) Then
+			btype = "GB"
+			divide = 3
+		ElseIf ( num_bytes >= 1048576 ) Then
+    			btype = "MB"
+    			divide = 2
+		ElseIf ( num_bytes >= 1024 ) Then
+	    		btype = "KB"
+	    		divide = 1
+		ElseIf ( num_bytes < 1024 ) Then
+    			divide = 0
+		End If
+
+		Do While ( divide > 0 )
+			num_bytes = num_bytes / 1024
+			divide = divide - 1
+		Loop
+
+		'result = FormatNumber(num_bytes, 2)
+		If ( tag ) Then
+			result = result&btype
+		End If
+		ConvertBytes = result
+	End Function
+</SCRIPT>
